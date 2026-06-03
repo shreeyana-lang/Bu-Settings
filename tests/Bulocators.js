@@ -16,8 +16,8 @@ class KycPage {
         this.Enablesubcheck = page.locator("(//div[@class='subd-col-check'])[4]");
         this.resultCheckboxLabel=page.locator('.subd-list-body .subd-list-item .subd-col-check label input[type="checkbox"]');
         this.subdssearch = page.locator("button[class='sc-jXbUNg cMkoqG iconBtnSmall search'] span[class='sc-eldPxv uSLPb']");
-        this.subssearchbox = page.getByRole('textbox', { name: 'Search' });
         this.EnableALLsubdcheck = page.locator("(//div[@class='subd-col-check'])").first();
+        this.subssearchbox = page.getByRole('textbox', { name: 'Search' });
         this.scrollSUBds = page.locator('.subd-col-title');
         this.firstSubdCheckbox = page.locator("(//div[@class='subd-col-check']//input[@type='checkbox'])[1]");
         this.deslectsubd = page.getByRole('button', { name: 'Deselect All' })
@@ -34,7 +34,11 @@ class KycPage {
         this.linecancelbutton = page.locator('button.cancel-btn').first();
         this.linecheckboxLabel = page.locator('//div[contains(@class,"doc-section")]//table//tbody//tr[1]//td[4]//span[contains(@class,"control-label")]');
         this.linecheckbox = page.locator('//div[contains(@class,"doc-section")]//table//tbody//tr[1]//td[4]//input[@type="checkbox"]');
+        this.pageerrorvalidation=page.locator('div.alert.alert-custom.danger');
+        this.editbutton= page.locator('div.icon-group').locator('span').nth(0);
+        this.deletebutton=page.locator('div.icon-group').locator('span').nth(1);
     }
+
     async login() {
         await this.usernameInput.fill('admin@udn.com.np');
         await this.passwordInput.fill('Evolve@123');
@@ -42,7 +46,7 @@ class KycPage {
             this.page.waitForNavigation({ waitUntil: 'networkidle' }),
             this.signInButton.click()
         ]);
-    }
+}
     async navigateToKycConfig() {
         await expect(this.kyctab).toBeVisible({ timeout: 15000 });
         await this.kyctab.click();
@@ -102,21 +106,11 @@ class KycPage {
         await lineSaveButton.click();
         const lineValidation = row.getByText('Must not be empty').first();
         await expect(lineValidation).toBeVisible({ timeout: 10000 });
-        console.log("Line validation is:-" + await lineValidation.isVisible());
+        console.log("DocumentLine validation is:-" + await lineValidation.isVisible());
         const lineCancelButton = row.locator('button.cancel-btn').first();
         await lineCancelButton.click();
         await expect(this.lineaddcommon).toBeEnabled({ timeout: 15000 });
     }
-    /*async insertfiletype1() {
-        await expect(this.linefiletypes).toBeVisible({ timeout: 10000 });
-        await expect(this.linefiletypeInput).toBeVisible({ timeout: 10000 });
-        await this.linefiletypeInput.click();
-        await this.page.waitForSelector('.zindex-2__menu-list[role="listbox"]:visible', { timeout: 10000 });
-        const menu = this.page.locator('.zindex-2__menu-list[role="listbox"]:visible').first();
-        const option = menu.getByRole('option', { name: /JPG/i }).first();
-        await expect(option).toBeVisible({ timeout: 10000 });
-        await option.click();
-    }*/
     async randomFileType(row = null) {
         const currentRow = row ?? this.currentEditRow();
         const fileTypeInput = currentRow.locator('.zindex-2__input').first();
@@ -237,14 +231,6 @@ class KycPage {
 
     await expect(this.lineaddcommon).toBeEnabled({ timeout: 15000 });
 }
-   /* async fillLedgerdoc(ledgerdoc) {
-        await this.lineaddledger.click();
-        const row = this.currentEditRow();
-        const documentInput = row.locator('input[name="name"]');
-        await expect(documentInput).toBeVisible({ timeout: 10000 });
-        await documentInput.fill(ledgerdoc);
-        await this.checkMandatory(row);
-    }*/
     async fillLedgerdocs(ledgerdoc) {
         await expect(this.lineaddledger).toBeVisible({ timeout: 15000 });
         await expect(this.lineaddledger).toBeEnabled({ timeout: 15000 });
@@ -254,6 +240,20 @@ class KycPage {
         await expect(documentInput).toBeVisible({ timeout: 10000 });
         await documentInput.fill(ledgerdoc);
         await this.checkMandatory(row);
+        await expect(this.lineaddledger).toBeEnabled({ timeout: 15000 });
+    }
+    async validationLedgerdoc() {
+        await this.lineaddledger.click();
+        const row = this.currentEditRow();
+        const lineSaveButton = row.locator('button.save-btn');
+        await expect(lineSaveButton).toBeVisible({ timeout: 10000 });
+        await expect(lineSaveButton).toBeEnabled({ timeout: 10000 });
+        await lineSaveButton.click();
+        const ledgerlineValidation = row.getByText('Must not be empty').first();
+        await expect(ledgerlineValidation).toBeVisible({ timeout: 10000 });
+        console.log("Ledger Line  validation is:-" + await ledgerlineValidation.isVisible());
+        const lineCancelButton = row.locator('button.cancel-btn').first();
+        await lineCancelButton.click();
         await expect(this.lineaddledger).toBeEnabled({ timeout: 15000 });
     }
     async pagesave() {
@@ -292,6 +292,7 @@ class KycPage {
     async search() {
         await this.subdssearch.click();
          const searchTexts = [
+        "abv",
         "stores",
         
     ];
@@ -327,6 +328,51 @@ async checkItemState() {
         await this.enablesubds1();
     }
 }
-  
+async verifyCommonDocuments(docName) {
+    const docRow = this.page.locator(`//div[contains(@class,"doc-section")]//td[normalize-space()="${docName}"]`);
+    await expect(docRow).toBeVisible({ timeout: 10000 });
+    console.log(`Verified Common Document exists: ${docName}`);
 }
+  async verifyLedgerDocuments(docName) {
+    const ledgerRow = this.page.locator(`//div[contains(@class,"doc-section")]//td[normalize-space()="${docName}"]`);
+    await expect(ledgerRow).toBeVisible({ timeout: 10000 });
+    console.log(`Verified Ledger Document exists: ${docName}`);
+}
+async pagevalidation(){
+    await expect(this.pageerrorvalidation).toBeVisible({ timeout: 10000 });
+        console.log('Error message is visible: ' + await this.pageerrorvalidation.isVisible());
+        await this.page.waitForLoadState('networkidle');
+        await expect(this.pageerrorvalidation).toBeVisible({ timeout: 15000 });
+         const errmsg = await this.pageerrorvalidation.textContent();
+        console.log("Validation Message:- " + errmsg);
+}
+async checkallsub(){
+    await this.EnableALLsubdcheck.click();
+}
+async verifySubdHeaderMatchesChecklist() {
+    const headerText = await this.page.locator('#react-tabs-23 > div.custom-scroll.body > div > div.card-section.subd-section.card > div.subd-list-container > div.sc-fvtFIe.bGSskM.bulk-component > div.sc-jMakVo.bOyUuI > span').first().textContent();
+    console.log("Header Text:", headerText);
+    const match = headerText.match(/(#react-tabs-23 > div.custom-scroll.body > div > div.card-section.subd-section.card > div.subd-list-container > div.sc-fvtFIe.bGSskM.bulk-component > div.sc-jMakVo.bOyUuI > span)/);
+    if (!match) {
+        throw new Error("Header format is incorrect");
+        await  this.page.pause();
+    }
+    const selectedCount = parseInt(match[1]);
+    const totalCount = parseInt(match[2]);
+    console.log(`Selected: ${selectedCount}, Total: ${totalCount}`);
+    const checklistCount = await this.page.locator('.subd-list-body .subd-list-item').count();
+    console.log("Checklist Count:", checklistCount);
+    expect(checklistCount).toBe(totalCount);
+    const checkedCount = await this.page.locator('.subd-list-body input[type="checkbox"]:checked').count();
+    console.log("Checked Count:", checkedCount);
+    expect(checkedCount).toBe(selectedCount);
+    console.log(" SubD header matches checklist successfully");
+}
+async editfunction(){
+     await this.editbutton.click();
+     await this.commomdocuments("EditDOC");
+     await this.page.pause();
+}
+}
+
 module.exports = { KycPage };
