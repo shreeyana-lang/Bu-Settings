@@ -106,6 +106,11 @@ test('BUSettings', async ({ page }) => {
     console.log("All created documents verified successfully");
 //Successfully Save kyc page and then clcik on cancel
       await kycpage.reset();
+//Edit Verification for Common documents
+     await kycpage.editFunctionrandom();
+//Edit Verification for ledger documents
+    await kycpage.editledgerFunctionrandom();
+    await kycpage.saveKyc();
 });
 
 

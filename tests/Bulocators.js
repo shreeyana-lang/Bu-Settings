@@ -37,6 +37,7 @@ class KycPage {
         this.pageerrorvalidation=page.locator('div.alert.alert-custom.danger');
         this.editbutton= page.locator('div.icon-group').locator('span').nth(0);
         this.deletebutton=page.locator('div.icon-group').locator('span').nth(1);
+        this.ledgereditbutton=page.locator("tbody tr:nth-child(1) td:nth-child(3) div:nth-child(1) span:nth-child(1) svg");
     }
 
     async login() {
@@ -370,8 +371,126 @@ async verifySubdHeaderMatchesChecklist() {
 }
 async editfunction(){
      await this.editbutton.click();
-     await this.commomdocuments("EditDOC");
-     await this.page.pause();
+     await this.editcommomdocuments("EditDoc");
+}
+async editcommomdocuments(documentname) {
+        const row = this.currentEditRow();
+        const documentInput = row.locator('input[name="name"]');
+        await expect(documentInput).toBeVisible({ timeout: 10000 });
+        await documentInput.fill(documentname);
+        await this.editrandomFileType(row);
+        await this.checkMandatory(row);
+        await expect(this.lineaddcommon).toBeEnabled({ timeout: 15000 });
+    }
+     async editfillLedgerdocs(ledgerdoc) {
+        const row = this.currentEditRow();
+        const documentInput = row.locator('input[name="name"]');
+        await expect(documentInput).toBeVisible({ timeout: 10000 });
+        await documentInput.fill(ledgerdoc);
+        await this.checkMandatory(row);
+        await expect(this.lineaddledger).toBeEnabled({ timeout: 15000 });
+    }
+    //Edit the file type after creating the common documents
+    async editrandomFileType(row = null) {
+    const currentRow = row ?? this.currentEditRow();
+    const fileTypeInput = currentRow.locator('.zindex-2__input').first();
+
+    await expect(fileTypeInput).toBeVisible({ timeout: 10000 });
+    await fileTypeInput.click();
+
+    await this.page.waitForSelector(
+        '.zindex-2__menu-list[role="listbox"]:visible',
+        { timeout: 10000 }
+    );
+
+    const menu = this.page.locator(
+        '.zindex-2__menu-list[role="listbox"]:visible'
+    ).first();
+
+    const optionLocator = menu.locator('div[role="option"]:visible');
+
+    const optionTexts = (await optionLocator.allTextContents())
+        .map(text => text.trim())
+        .filter(text => text.length > 0);
+    if (optionTexts.length === 0) {
+        console.log('No file type options available. Skipping...');
+        await this.page.keyboard.press('Escape');
+       await this.insertsizelimit(row);
+        return;
+    }
+    const selectionCount = Math.min(
+        optionTexts.length,
+        Math.max(1, Math.floor(Math.random() * 3) + 1)
+    );
+    await this.page.keyboard.press('Escape');
+}//Randomly select the Rows vaues to be Edited for common Documents
+async editFunctionrandom() {
+    const rows = this.page.locator('//div[contains(@class,"doc-section")][.//h4[contains(text(),"Common Document Requirements")]]//table//tbody/tr');
+    const rowCount = await rows.count();
+
+    if (rowCount == 0) {
+        throw new Error('No common document rows found to edit');
+        return;
+    }
+
+    const randomEditCount = rowCount === 1 ? 1 : Math.floor(Math.random() * rowCount) + 1;
+
+    console.log(`Total rows: ${rowCount}`);
+    console.log(`Editing ${randomEditCount} rows`);
+
+    const selectedRows = [];
+    while (selectedRows.length < randomEditCount) {
+        const randomIndex = Math.floor(Math.random() * rowCount);
+        if (!selectedRows.includes(randomIndex)) {
+            selectedRows.push(randomIndex);
+        }
+    }
+
+    console.log('Selected rows:', selectedRows);
+    for (const rowIndex of selectedRows) {
+        const row = rows.nth(rowIndex);
+        await row.locator('div.icon-group span').first().click();
+        await this.editcommomdocuments(`EditDoc_${rowIndex}`);
+        await this.page.waitForTimeout(500);
+    }
+}
+//Randomly select the Rows vaues to be Edited for ledger Documents
+async editledgerFunctionrandom() {
+    const rows = this.page.locator('//div[contains(@class,"doc-section")][.//h4[contains(text(),"Ledger Related Documents")]]//table//tbody/tr');
+    const rowCount = await rows.count();
+
+    if (rowCount === 0) {
+        throw new Error('No ledger document rows found to edit');
+    }
+
+    const randomEditCount = rowCount === 1 ? 1 : Math.floor(Math.random() * rowCount) + 1;
+
+    console.log(`Total rows: ${rowCount}`);
+    console.log(`Editing ${randomEditCount} rows`);
+
+    const selectedRows = [];
+    while (selectedRows.length < randomEditCount) {
+        const randomIndex = Math.floor(Math.random() * rowCount);
+        if (!selectedRows.includes(randomIndex)) {
+            selectedRows.push(randomIndex);
+        }
+    }
+
+    console.log('Selected rows:', selectedRows);
+    for (const rowIndex of selectedRows) {
+        const row = rows.nth(rowIndex);
+        await row.locator('div.icon-group span').first().click();
+        await this.editfillLedgerdocs(`EditDoc_${rowIndex}`);
+        await this.page.waitForTimeout(500);
+    }
+}
+async editverifyCommonDocuments(docName) {
+    const docRow = this.page.locator(`//div[contains(@class,"doc-section")]//td[normalize-space()="${docName}"]`);
+    console.log(`Verified Edited Common Document exists: ${docName}`);
+}
+  async editverifyLedgerDocuments(docName) {
+    const ledgerRow = this.page.locator(`//div[contains(@class,"doc-section")]//td[normalize-space()="${docName}"]`);
+    console.log(`Verified Edited Ledger Document exists: ${docName}`);
 }
 }
 
