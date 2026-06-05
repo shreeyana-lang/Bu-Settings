@@ -446,7 +446,7 @@ async editFunctionrandom() {
         }
     }
 
-    console.log('Selected rows:', selectedRows);
+    console.log('Edited Selected rows:', selectedRows);
     for (const rowIndex of selectedRows) {
         const row = rows.nth(rowIndex);
         await row.locator('div.icon-group span').first().click();
@@ -492,6 +492,57 @@ async editverifyCommonDocuments(docName) {
     const ledgerRow = this.page.locator(`//div[contains(@class,"doc-section")]//td[normalize-space()="${docName}"]`);
     console.log(`Verified Edited Ledger Document exists: ${docName}`);
 }
-}
+//Deletes the random rows from the ledger documents part
+    async deleteLedgerRandomRows() {
+    const section = this.page.locator('//div[contains(@class,"doc-section")][.//h4[contains(text(),"Ledger Related Documents")]]');
+    const rows = section.locator('xpath=.//table//tbody/tr');
+    const rowCount = await rows.count();
 
+    if (rowCount === 0) {
+        throw new Error('No ledger document rows found');
+    }
+    const randomRowCount = rowCount === 1 ? 1 : Math.floor(Math.random() * rowCount) + 1;
+    const selectedRows = Array.from({ length: rowCount }, (_, idx) => idx);
+    selectedRows.sort(() => Math.random() - 0.5);
+    selectedRows.length = randomRowCount;
+    selectedRows.sort((a, b) => b - a);
+
+    console.log('Selected ledger row indexes to delete:', selectedRows);
+
+    for (const rowIndex of selectedRows) {
+        const row = section.locator('xpath=.//table//tbody/tr').nth(rowIndex);
+        const secondIcon = row.locator('div.icon-group span').nth(1);
+        await secondIcon.click();
+        await this.page.waitForTimeout(500);
+    }
+
+    await this.saveKyc();
+}
+//Deletes the random rows from the Common documents part
+    async deletecommonRandomRows() {
+    const section = this.page.locator('//div[contains(@class,"doc-section")][.//h4[contains(text(),"Common Document Requirements")]]');
+    const rows = section.locator('xpath=.//table//tbody/tr');
+    const rowCount = await rows.count();
+
+    if (rowCount === 0) {
+        throw new Error('No Common document rows found');
+    }
+    const randomRowCount = rowCount === 1 ? 1 : Math.floor(Math.random() * rowCount) + 1;
+    const selectedRows = Array.from({ length: rowCount }, (_, idx) => idx);
+    selectedRows.sort(() => Math.random() - 0.5);
+    selectedRows.length = randomRowCount;
+    selectedRows.sort((a, b) => b - a);
+
+    console.log('Selected common document row indexes to delete:', selectedRows);
+
+    for (const rowIndex of selectedRows) {
+        const row = section.locator('xpath=.//table//tbody/tr').nth(rowIndex);
+        const secondIcon = row.locator('div.icon-group span').nth(1);
+        await secondIcon.click();
+        await this.page.waitForTimeout(500);
+    }
+
+    await this.saveKyc();
+}
+}
 module.exports = { KycPage };

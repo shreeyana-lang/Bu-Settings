@@ -111,6 +111,10 @@ test('BUSettings', async ({ page }) => {
 //Edit Verification for ledger documents
     await kycpage.editledgerFunctionrandom();
     await kycpage.saveKyc();
+//Delete verification process
+    await kycpage.deletecommonRandomRows();
+   await kycpage.deleteLedgerRandomRows();
+   await kycpage.pagesave();
 });
 
 
